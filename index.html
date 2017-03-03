@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title> Physics Library Demo </title>
+        <style type="text/css" rel="stylesheet">
+            *{
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+	</head>
+	
+	
+	<body>   
+        <canvas id="canvas" style="display: block;" width="800" height="600"></canvas>
+        
+        <script id="vertexShader" type="x-shader/x-vertex">
+            precision mediump float;
+
+            attribute vec2 vertexPosition;
+
+            void main(){
+               gl_Position = vec4(vertexPosition, 0.0, 1.0);
+            }
+        </script>
+        
+        <script id="fragmentShader" type="x-shader/x-fragment">
+            #define PI 3.1415926535897932384626433832795
+            precision mediump float;
+            
+            vec2 computeQuadratic(float a, float b, float c){
+                float discriminant, firstAnswer, secondAnswer;
+
+                discriminant = pow(b, 2.0) - (4.0 * a * c);
+
+                if(discriminant < 0.0){
+                    return vec2(-1.0);
+                }
+
+                firstAnswer = (-b) + sqrt(discriminant);
+                firstAnswer /= (2.0 * a);
+
+                secondAnswer = (-b) - sqrt(discriminant);
+                secondAnswer /= (2.0 * a);
+
+                return vec2(firstAnswer, secondAnswer);                              
+            }
+
+            vec3 intersection(vec3 rayDirection, vec3 center, float radius){
+                float a = pow(rayDirection.x, 2.0) + pow(rayDirection.y, 2.0) + pow(rayDirection.z, 2.0); 
+                float b = (-2.0) * ((rayDirection.x * center.x) + (rayDirection.y * center.y) + (rayDirection.z * center.z));
+                float c = (pow(center.x, 2.0) + pow(center.y, 2.0) + pow(center.z, 2.0)) - pow(radius, 2.0);
+
+                vec2 roots = computeQuadratic(a, b, c);
+
+                if(roots.x == (-1.0) && roots.y == (-1.0)){
+                    return vec3(-1.0);
+
+                }else{
+                    float t = min(roots.x, roots.y);
+                    return rayDirection * t;
+                }    
+            }
+
+            vec3 intersectionSphere(vec3 center, float radius, vec3 origin, vec3 rayDirection){
+                float a = origin.x;
+                float b = rayDirection.x;
+                float c = center.x;
+
+                float d = origin.y;
+                float e = rayDirection.y;
+                float f = center.y;
+
+                float g = origin.z;
+                float h = rayDirection.z;
+                float i = center.z;
+
+
+                //for quadratic equation
+                float A = pow(b, 2.0) + pow(e, 2.0) + pow(h, 2.0); 
+                float B = (2.0 * a * b) - (2.0 * b * c) + (2.0 * d * e) - (2.0 * e * f) + (2.0 * g * h) - (2.0 * h * i);
+                float C = pow(a, 2.0) - (2.0 * a * c) + pow(c, 2.0) + pow(d, 2.0) - (2.0 * d * f) + pow(f, 2.0) + pow(g, 2.0)
+                          - (2.0 * g * i) + pow(i, 2.0) - pow(radius, 2.0);
+
+                vec2 roots = computeQuadratic(A, B, C);
+                if(roots.x == (-1.0) && roots.y == (-1.0)){
+                    return vec3(-1.0);
+                }else{
+                    float t = min(roots.x, roots.y);
+                    return rayDirection * t;
+                } 
+            }
+
+            vec3 intersectionPlane(vec3 point, vec3 normal, vec3 origin, vec3 rayDirection){
+                float t = dot(normal, point - origin) / dot(normal, rayDirection);
+
+                if(t < 0.0){
+                    return vec3(-1.0);
+                }
+
+                return rayDirection * t;
+            }
+
+            float diffuse(vec3 normal, vec3 lightVector){
+                return max(dot(normal, lightVector), 0.0);
+            }
+
+
+            uniform vec2 resolution;
+            uniform float time;
+            uniform sampler2D sampler;
+            
+            vec3 leftWallPoint = vec3(-10.0, 0.0, 5.5);
+            vec3 leftWallNormal = vec3(1.0, 0.0, 0.0);
+
+            vec3 farWallPoint = vec3(0.0, 0.0, 11.0);
+            vec3 farWallNormal = vec3(0.0, 0.0, -1.0);
+
+            vec3 nearWallPoint = vec3(0.0, 0.0, -1.0);
+            vec3 nearWallNormal = vec3(0.0, 0.0, 1.0);
+
+            vec3 rightWallPoint = vec3(10.0, 0.0, 5.5);
+            vec3 rightWallNormal = vec3(-1.0, 0.0, 0.0);
+
+            vec3 floorPoint = vec3(0.0, -6.5, 5.5);
+            vec3 floorNormal = vec3(0.0, 1.0, 0.0);
+
+            vec3 roofPoint = vec3(0.0, 6.5, 5.5);
+            vec3 roofNormal = vec3(0.0, -1.0, 0.0);
+
+            vec3 transparentSphereCenter = vec3(-4.0, -1.0, 5.5);
+            float transparentSphereRadius = 1.5;
+
+            vec3 opaqueSphereCenter = vec3(0.0, -1.0, 5.5);
+            float opaqueSphereRadius = 1.5;
+
+            vec3 lightPosition = vec3(0.0, 2.0, 0.5);
+
+            struct intersectionInfo {
+                vec3 point;
+                vec3 normal;
+                int id;
+            };
+
+            intersectionInfo checkForClosestIntersection(vec3 origin, vec3 rayDirection, int selfId){
+
+                intersectionInfo infoObj;    
+                vec3 testIntersectionPoint;
+                infoObj.point = vec3(100.0);
+
+                testIntersectionPoint = intersectionSphere(opaqueSphereCenter, opaqueSphereRadius, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 1)){        
+                    infoObj.point = testIntersectionPoint;
+                    infoObj.id = 1;
+                    infoObj.normal = normalize(infoObj.point - opaqueSphereCenter);
+                }
+
+                testIntersectionPoint = intersectionSphere(transparentSphereCenter, transparentSphereRadius, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 2)){  
+                    if(length(testIntersectionPoint) < length(infoObj.point)){
+                        infoObj.point = testIntersectionPoint;
+                        infoObj.id = 2;
+                        infoObj.normal = normalize(infoObj.point - transparentSphereCenter);
+                    }
+                }
+
+                testIntersectionPoint = intersectionPlane(leftWallPoint, leftWallNormal, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 4)){
+                    if(length(testIntersectionPoint) < length(infoObj.point)){
+                        infoObj.point = testIntersectionPoint;
+                        infoObj.id = 4;
+                        infoObj.normal = leftWallNormal;
+                    }
+                }
+
+                testIntersectionPoint = intersectionPlane(farWallPoint, farWallNormal, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 7)){
+                    if(length(testIntersectionPoint) < length(infoObj.point)){
+                        infoObj.point = testIntersectionPoint;
+                        infoObj.id = 7;
+                        infoObj.normal = farWallNormal;
+                    }
+                }
+
+                testIntersectionPoint = intersectionPlane(nearWallPoint, nearWallNormal, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 8)){
+                    if(length(testIntersectionPoint) < length(infoObj.point)){
+                        infoObj.point = testIntersectionPoint;
+                        infoObj.id = 8;
+                        infoObj.normal = nearWallNormal;
+                    }
+                }
+
+                testIntersectionPoint = intersectionPlane(rightWallPoint, rightWallNormal, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 6)){
+                    if(length(testIntersectionPoint) < length(infoObj.point)){
+                        infoObj.point = testIntersectionPoint;
+                        infoObj.id = 6;
+                        infoObj.normal = rightWallNormal;
+                    }
+                }
+
+                testIntersectionPoint = intersectionPlane(floorPoint, floorNormal, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 3)){
+                    if(length(testIntersectionPoint) < length(infoObj.point)){
+                        infoObj.point = testIntersectionPoint;
+                        infoObj.id = 3;
+                        infoObj.normal = floorNormal;
+                    }
+                }
+
+                testIntersectionPoint = intersectionPlane(roofPoint, roofNormal, origin, rayDirection);
+                if(!(testIntersectionPoint.x == (-1.0)) && (selfId != 5)){
+                    if(length(testIntersectionPoint) < length(infoObj.point)){
+                        infoObj.point = testIntersectionPoint;
+                        infoObj.id = 5;
+                        infoObj.normal = roofNormal;
+                    }
+                }
+
+                return infoObj;
+            }
+
+            intersectionInfo getReflectInfo(intersectionInfo p_infoObj){
+                vec3 reflectedVector = reflect(normalize(p_infoObj.point), p_infoObj.normal);
+
+                intersectionInfo reflectedIntersection = checkForClosestIntersection(p_infoObj.point, normalize(reflectedVector), p_infoObj.id);
+
+                return reflectedIntersection;
+            }
+
+
+            bool isInShadow(intersectionInfo p_infoObj){
+                vec3 lightVector = normalize(lightPosition - p_infoObj.point);
+
+                intersectionInfo info = checkForClosestIntersection(p_infoObj.point, lightVector, p_infoObj.id);
+
+                if(p_infoObj.id == info.id){
+                    return false;
+                }
+
+                if(info.id == 2){
+                    return false;
+                }
+
+                if(distance(p_infoObj.point, info.point) <= distance(p_infoObj.point, lightPosition)){
+                    return true;
+                }else{
+                    return false;
+                }
+            } 
+
+            vec3 getTextureCoordinates(intersectionInfo p_info){
+                vec3 color = vec3(0.8);
+                vec3 texturePoint;
+                vec2 textureCoord;
+
+                if(p_info.id == 3){
+                    texturePoint = p_info.point - floorPoint;
+                    textureCoord = texturePoint.xz;
+                    textureCoord.x /= 10.0;
+                    textureCoord.y /= 5.5;
+                    textureCoord = (textureCoord + 1.0) / 2.0;
+
+                    color = texture2D(sampler, textureCoord).rgb;
+                }else if(p_info.id == 4){
+                    texturePoint = p_info.point - leftWallPoint;
+                    textureCoord = texturePoint.zy;
+                    textureCoord.x /= 10.0;
+                    textureCoord.y /= 6.5;
+                    textureCoord = (textureCoord + 1.0) / 2.0;
+
+                    color = texture2D(sampler, textureCoord).rgb;
+                }else if(p_info.id == 5){
+                    texturePoint = p_info.point - roofPoint;
+                    textureCoord = texturePoint.xz;
+                    textureCoord.x /= 10.0;
+                    textureCoord.y /= 5.5;
+                    textureCoord = (textureCoord + 1.0) / 2.0;
+
+                    color = texture2D(sampler, textureCoord).rgb;
+                }else if(p_info.id == 6){
+                    texturePoint = p_info.point - rightWallPoint;
+                    textureCoord = texturePoint.zy;
+                    textureCoord.x /= 10.0;
+                    textureCoord.y /= 6.5;
+                    textureCoord = (textureCoord + 1.0) / 2.0;
+
+                    color = texture2D(sampler, textureCoord).rgb;
+                }else if(p_info.id == 7){
+                    texturePoint = p_info.point - farWallPoint;
+                    textureCoord = texturePoint.xy;
+                    textureCoord.x /= 10.0;
+                    textureCoord.y /= 6.5;
+                    textureCoord = (textureCoord + 1.0) / 2.0;
+
+                    color = texture2D(sampler, textureCoord).rgb;   
+                }else if(p_info.id == 8){
+                    texturePoint = p_info.point - nearWallPoint;
+                    textureCoord = texturePoint.xy;
+                    textureCoord.x /= 10.0;
+                    textureCoord.y /= 6.5;
+                    textureCoord = (textureCoord + 1.0) / 2.0;
+
+                    color = texture2D(sampler, textureCoord).rgb;
+                }
+
+                return color;
+            }
+
+            void main()
+            {
+                vec2 uv = gl_FragCoord.xy / resolution.xy;
+                float aspectRatio = resolution.x/resolution.y;
+                vec3 rayDirection = normalize(vec3(vec2(aspectRatio * ((2.0 * uv.x) - 1.0), ((2.0 * uv.y) - 1.0)), 1.0));
+                //lightPosition = vec3(-5.0 * -cos( iGlobalTime), -1.0, (4.0 * cos(iGlobalTime + 1.7)) + 6.0);
+                //opaqueSphereCenter = vec3(0.0, sin(iGlobalTime) * 2.0 + 3.0, 5.0);
+                transparentSphereCenter = vec3(-5.0 * cos(time), 1.0, (4.0 * cos(time + 1.7)) + 6.0);
+
+                vec3 color = vec3 (0.0);
+
+                intersectionInfo obj = checkForClosestIntersection(vec3(0.0), rayDirection, 0);
+
+                if(obj.id == 2){
+                    obj = getReflectInfo(obj);
+                }
+
+                if(isInShadow(obj)){
+                    color = vec3(0.0);
+                }else{
+                    if(obj.id == 1){
+                        //sphere
+
+                        color = vec3(1.0, 0.0, 0.0);
+                        vec3 lightVector;
+                        float diffuseValue, specularValue;
+
+                        lightVector = normalize(lightPosition - obj.point);
+                        diffuseValue = diffuse(obj.normal, lightVector);
+                        vec3 diffuseColor = diffuseValue * vec3(1.0, 1.0, 1.0);
+
+                        vec3 incidentLightVector = -lightVector;
+                        vec3 reflectionVector = reflect(incidentLightVector, obj.normal);
+                        vec3 viewVector = (-1.0) * normalize(obj.point);
+                        specularValue = max(dot(reflectionVector, viewVector), 0.0);
+                        vec3 specularColor = pow(specularValue, 32.0) * vec3(1.0, 1.0, 1.0);
+
+                        color *= (specularColor + diffuseColor);
+                  }else if (obj.id > 2){
+                        //plane
+                        color = vec3(0.1, 0.7, 0.9);
+                        vec3 lightVector;
+                        float diffuseValue;
+
+                        color = getTextureCoordinates(obj);
+
+                        lightVector = normalize(lightPosition - obj.point);
+                        diffuseValue = diffuse(obj.normal, lightVector);
+
+                        color *= diffuseValue;
+                    }
+                }    
+
+                gl_FragColor = vec4(color, 1.0);
+            }
+        </script>
+        
+        <script type="text/javascript" src="main.js"></script>
+    </body>
+
+
+</html>
