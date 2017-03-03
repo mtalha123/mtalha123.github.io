@@ -85,6 +85,7 @@ var startTime = Date.now();
 
 var texture = gl.createTexture();
 var image = new Image();
+image.src = "brick.jpg";
 
 image.onload = function(){
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -94,8 +95,6 @@ image.onload = function(){
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.bindTexture(gl.TEXTURE_2D, null);
 };
-
-image.src = "brick.jpg";
 
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, texture);
