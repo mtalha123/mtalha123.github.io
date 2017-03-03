@@ -315,7 +315,7 @@
                 vec2 uv = gl_FragCoord.xy / resolution.xy;
                 float aspectRatio = resolution.x/resolution.y;
                 vec3 rayDirection = normalize(vec3(vec2(aspectRatio * ((2.0 * uv.x) - 1.0), ((2.0 * uv.y) - 1.0)), 1.0));
-                //lightPosition = vec3(-5.0 * -cos( iGlobalTime), -1.0, (4.0 * cos(iGlobalTime + 1.7)) + 6.0);
+                lightPosition = vec3(-5.0 * -cos( iGlobalTime), -1.0, (4.0 * cos(iGlobalTime + 1.7)) + 6.0);
                 //opaqueSphereCenter = vec3(0.0, sin(iGlobalTime) * 2.0 + 3.0, 5.0);
                 transparentSphereCenter = vec3(-5.0 * cos(time), 1.0, (4.0 * cos(time + 1.7)) + 6.0);
 
