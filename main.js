@@ -100,7 +100,7 @@ gl.bindTexture(gl.TEXTURE_2D, brickTexture);
 
 var UWTexture = gl.createTexture();
 var UWImage = new Image();
-UWImage.src = "UWTexture.jpg";
+UWImage.src = "uwtexture.jpg";
 
 UWImage.onload = function(){
     gl.bindTexture(gl.TEXTURE_2D, UWTexture);
