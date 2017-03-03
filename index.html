@@ -110,7 +110,7 @@
 
             uniform vec2 resolution;
             uniform float time;
-            uniform sampler2D sampler;
+            uniform sampler2D bricks;
             
             vec3 leftWallPoint = vec3(-10.0, 0.0, 5.5);
             vec3 leftWallNormal = vec3(1.0, 0.0, 0.0);
@@ -264,7 +264,7 @@
                     textureCoord.y /= 5.5;
                     textureCoord = (textureCoord + 1.0) / 2.0;
 
-                    color = texture2D(sampler, textureCoord).rgb;
+                    color = texture2D(bricks, textureCoord).rgb;
                 }else if(p_info.id == 4){
                     texturePoint = p_info.point - leftWallPoint;
                     textureCoord = texturePoint.zy;
@@ -272,7 +272,7 @@
                     textureCoord.y /= 6.5;
                     textureCoord = (textureCoord + 1.0) / 2.0;
 
-                    color = texture2D(sampler, textureCoord).rgb;
+                    color = texture2D(bricks, textureCoord).rgb;
                 }else if(p_info.id == 5){
                     texturePoint = p_info.point - roofPoint;
                     textureCoord = texturePoint.xz;
@@ -280,7 +280,7 @@
                     textureCoord.y /= 5.5;
                     textureCoord = (textureCoord + 1.0) / 2.0;
 
-                    color = texture2D(sampler, textureCoord).rgb;
+                    color = texture2D(bricks, textureCoord).rgb;
                 }else if(p_info.id == 6){
                     texturePoint = p_info.point - rightWallPoint;
                     textureCoord = texturePoint.zy;
@@ -288,7 +288,7 @@
                     textureCoord.y /= 6.5;
                     textureCoord = (textureCoord + 1.0) / 2.0;
 
-                    color = texture2D(sampler, textureCoord).rgb;
+                    color = texture2D(bricks, textureCoord).rgb;
                 }else if(p_info.id == 7){
                     texturePoint = p_info.point - farWallPoint;
                     textureCoord = texturePoint.xy;
@@ -296,7 +296,7 @@
                     textureCoord.y /= 6.5;
                     textureCoord = (textureCoord + 1.0) / 2.0;
 
-                    color = texture2D(sampler, textureCoord).rgb;   
+                    color = texture2D(bricks, textureCoord).rgb;   
                 }else if(p_info.id == 8){
                     texturePoint = p_info.point - nearWallPoint;
                     textureCoord = texturePoint.xy;
@@ -304,7 +304,7 @@
                     textureCoord.y /= 6.5;
                     textureCoord = (textureCoord + 1.0) / 2.0;
 
-                    color = texture2D(sampler, textureCoord).rgb;
+                    color = texture2D(bricks, textureCoord).rgb;
                 }
 
                 return color;
