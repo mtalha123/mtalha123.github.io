@@ -111,6 +111,7 @@
             uniform vec2 resolution;
             uniform float time;
             uniform sampler2D bricks;
+	    uniform sampler2D UWTexture;
             
             vec3 leftWallPoint = vec3(-10.0, 0.0, 5.5);
             vec3 leftWallNormal = vec3(1.0, 0.0, 0.0);
@@ -296,7 +297,7 @@
                     textureCoord.y /= 6.5;
                     textureCoord = (textureCoord + 1.0) / 2.0;
 
-                    color = texture2D(bricks, textureCoord).rgb;   
+                    color = texture2D(UWTexture, textureCoord).rgb;   
                 }else if(p_info.id == 8){
                     texturePoint = p_info.point - nearWallPoint;
                     textureCoord = texturePoint.xy;
