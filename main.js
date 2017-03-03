@@ -83,23 +83,38 @@ var fpsCounter = 0;
 var fps;
 var startTime = Date.now();
 
-var texture = gl.createTexture();
-var image = new Image();
-image.src = "brick.jpg";
+var brickTexture = gl.createTexture();
+var brickImage = new Image();
+brickImage.src = "brick.jpg";
 
-image.onload = function(){
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+brickImage.onload = function(){
+    gl.bindTexture(gl.TEXTURE_2D, brickTexture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, brickImage);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 };
 
 gl.activeTexture(gl.TEXTURE0);
-gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.bindTexture(gl.TEXTURE_2D, brickTexture);
 
-var samplerLocation = gl.getUniformLocation(shaderProgram, "bricks");
-gl.uniform1i(samplerLocation, 0);
+var UWTexture = gl.createTexture();
+var UWImage = new Image();
+UWImage.src = "UWTexture.jpg";
+
+UWImage.onload = function(){
+    gl.bindTexture(gl.TEXTURE_2D, UWTexture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 1, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, UWImage);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+};
+
+gl.activeTexture(gl.TEXTURE1);
+gl.bindTexture(gl.TEXTURE_2D, UWTexture);
+
+var samplerLocation2 = gl.getUniformLocation(shaderProgram, "UWTexture");
+gl.uniform1i(samplerLocation2, 1);
 
 function draw(){
     gl.viewport(0, 0, canvasWidth, canvasHeight);
