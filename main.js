@@ -95,14 +95,14 @@ brickImage.onload = function(){
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 };
 
-var UWTexture = gl.createTexture();
-var UWImage = new Image();
-UWImage.src = "uwtexture.jpg";
+var textBrickTexture = gl.createTexture();
+var textBrickImage = new Image();
+textBrickImage.src = "text_brick.jpg";
 
-UWImage.onload = function(){
-    gl.bindTexture(gl.TEXTURE_2D, UWTexture);
+textBrickImage.onload = function(){
+    gl.bindTexture(gl.TEXTURE_2D, textBrickTexture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, UWImage);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textBrickImage);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 };
@@ -111,9 +111,9 @@ gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, brickTexture);
 
 gl.activeTexture(gl.TEXTURE1);
-gl.bindTexture(gl.TEXTURE_2D, UWTexture);
+gl.bindTexture(gl.TEXTURE_2D, textBrickTexture);
 
-var samplerLocation2 = gl.getUniformLocation(shaderProgram, "UWTexture");
+var samplerLocation2 = gl.getUniformLocation(shaderProgram, "textBrickTexture");
 gl.uniform1i(samplerLocation2, 1);
 
 function draw(){
@@ -125,17 +125,7 @@ function draw(){
     
     gl.enable(gl.BLEND);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-   // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    
-//    fpsCounter++;
-//    if((Date.now() - startTime) >= 1000){
-//        fps = fpsCounter;
-//        fpsCounter = 0;
-//        startTime = Date.now();
-//    }
-//    
-//    console.log("FPS: " + fps);
     
     requestAnimationFrame(draw);
 }
